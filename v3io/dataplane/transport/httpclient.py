@@ -22,6 +22,7 @@ import v3io.dataplane.request
 from . import abstract
 import queue
 
+
 class Transport(abstract.Transport):
 
     def __init__(self, logger, endpoint=None, max_connections=None, timeout=None, verbosity=None):
@@ -34,8 +35,8 @@ class Transport(abstract.Transport):
 
         # create the pool connection
         self._create_connections(self.max_connections,
-                                                     self._host,
-                                                     self._ssl_context)
+                                 self._host,
+                                 self._ssl_context)
 
         # python 2 and 3 have different exceptions
         if sys.version_info[0] >= 3:
@@ -51,7 +52,7 @@ class Transport(abstract.Transport):
 
     def requires_access_key(self):
         return True
-    
+
     def send_request(self, request):
         # TODO: consider getting param of whether we should block or not (wait for connection to be free or raise exception)
         connection = self._free_connections.get(block=True, timeout=None)
@@ -63,14 +64,16 @@ class Transport(abstract.Transport):
         try:
             return self._send_request_on_connection(request, connection)
         except BaseException as e:
-            self._free_connections.put(connection, block=True) 
+            self._free_connections.put(connection, block=True)
             raise e
-
 
     def wait_response(self, request, raise_for_status=None, num_retries=1):
         connection = request.transport.connection_used
 
         while True:
+            response_body = None
+            status_code = None
+            headers = None
             try:
 
                 # read the response
@@ -120,7 +123,12 @@ class Transport(abstract.Transport):
             except BaseException as e:
                 self._logger.warn_with('Unhandled exception while waiting for response',
                                        e=type(e),
+                                       response_body=response_body,
+                                       status_code=status_code,
+                                       headers=headers,
                                        connection=connection)
+                # we don't know what happened – close the connection just in case
+                connection.close()
                 raise e
             finally:
                 self._free_connections.put(connection, block=True)
@@ -139,7 +147,7 @@ class Transport(abstract.Transport):
             connection.request(request.method, path, request.body, request.headers)
         except self._send_request_exceptions as e:
             self._logger.debug_with('Disconnected while attempting to send. Recreating connection', e=type(e))
-            
+
             # re-request (connection.connect is called automaticly when connection is closed)
             connection.close()
             connection.request(request.method, path, request.body, request.headers)
@@ -148,7 +156,7 @@ class Transport(abstract.Transport):
             raise e
 
         return request
-   
+
     def _create_connections(self, num_connections, host, ssl_context):
         for _ in range(num_connections):
             connection = self._create_connection(host, ssl_context)

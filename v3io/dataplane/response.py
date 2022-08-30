@@ -17,9 +17,11 @@ import xml.etree.ElementTree
 
 import v3io.dataplane.transport
 
+
 class HttpResponseError(Exception):
     """Exception raised on bad http status"""
     pass
+
 
 class Response(object):
 
@@ -27,15 +29,23 @@ class Response(object):
         self.status_code = status_code
         self.body = body
         self.headers = headers
-        self.output = None
+        self._output = output
+        self._parsed_output = None
 
-        if output and self.body:
+    @property
+    def output(self):
+        if self._parsed_output:
+            return self._parsed_output
+
+        if self._output and self.body:
             try:
                 parsed_output = ujson.loads(self.body)
             except Exception:
                 parsed_output = xml.etree.ElementTree.fromstring(self.body)
 
-            self.output = output(parsed_output)
+            self._parsed_output = self._output(parsed_output)
+
+            return self._parsed_output
 
     def raise_for_status(self, expected_statuses=None):
         if expected_statuses == v3io.dataplane.transport.RaiseForStatus.never:
