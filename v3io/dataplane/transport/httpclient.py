@@ -106,7 +106,7 @@ class Transport(abstract.Transport):
 
                     raise e
 
-                self._logger.debug_with('Remote disconnected while waiting for response',
+                self._logger.warn_with('Remote disconnected while waiting for response',
                                         retries_left=num_retries,
                                         connection=connection)
 
