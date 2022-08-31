@@ -123,6 +123,7 @@ class Transport(abstract.Transport):
             except BaseException as e:
                 self._logger.warn_with('Unhandled exception while waiting for response',
                                        e=type(e),
+                                       e_msg=e,
                                        response_body=response_body,
                                        status_code=status_code,
                                        headers=headers,
