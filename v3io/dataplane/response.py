@@ -39,9 +39,13 @@ class Response(object):
 
         if self._output and self.body:
             try:
-                parsed_output = ujson.loads(self.body)
+                try:
+                    parsed_output = ujson.loads(self.body)
+                except Exception:
+                    parsed_output = xml.etree.ElementTree.fromstring(self.body)
             except Exception:
-                parsed_output = xml.etree.ElementTree.fromstring(self.body)
+                raise HttpResponseError(f"Failed to parse response with status {self.status_code}, "
+                                        f"body {self.body}, headers={self.headers}")
 
             self._parsed_output = self._output(parsed_output)
 
