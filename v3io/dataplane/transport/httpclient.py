@@ -57,13 +57,11 @@ class Transport(abstract.Transport):
         # TODO: consider getting param of whether we should block or not (wait for connection to be free or raise exception)
         connection = self._free_connections.get(block=True, timeout=None)
 
-        # set the used connection on the request
-        setattr(request.transport, 'connection_used', connection)
-
-        # get a connection for the request and send it
         try:
             return self._send_request_on_connection(request, connection)
         except BaseException as e:
+            connection.close()
+            connection = self._create_connection(self._host, self._ssl_context)
             self._free_connections.put(connection, block=True)
             raise e
 
@@ -77,6 +75,7 @@ class Transport(abstract.Transport):
             try:
 
                 # read the response
+                self._logger.info_with(f"{connection}.getresponse()")
                 response = connection.getresponse()
                 response_body = response.read()
 
@@ -124,8 +123,8 @@ class Transport(abstract.Transport):
 
                 num_retries -= 1
 
-                # make sure connections is closed (connection.connect is called automaticly when connection is closed)
                 connection.close()
+                connection = self._create_connection(self._host, self._ssl_context)
 
                 # re-send the request on the connection
                 request = self._send_request_on_connection(request, connection)
@@ -133,6 +132,9 @@ class Transport(abstract.Transport):
                 self._free_connections.put(connection, block=True)
 
     def _send_request_on_connection(self, request, connection):
+        # set the used connection on the request
+        setattr(request.transport, 'connection_used', connection)
+
         path = request.encode_path()
 
         self.log('Tx',
@@ -143,15 +145,19 @@ class Transport(abstract.Transport):
                  body=request.body)
 
         try:
+            self._logger.info_with(f"{connection}.request({request.method}, {path}, {request.body}, {request.headers})")
             connection.request(request.method, path, request.body, request.headers)
         except self._send_request_exceptions as e:
-            self._logger.debug_with('Disconnected while attempting to send. Recreating connection', e=type(e))
+            self._logger.error_with('Disconnected while attempting to send. Recreating connection', e=type(e), e_msg=e,
+                                    connection=connection)
 
             # re-request (connection.connect is called automaticly when connection is closed)
             connection.close()
+            connection = self._create_connection(self._host, self._ssl_context)
+            setattr(request.transport, 'connection_used', connection)
             connection.request(request.method, path, request.body, request.headers)
         except BaseException as e:
-            self._logger.warn_with('Unhandled exception while sending request', e=type(e))
+            self._logger.error_with('Unhandled exception while sending request', e=type(e), e_msg=e, connection=connection)
             raise e
 
         return request
