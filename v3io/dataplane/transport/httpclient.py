@@ -98,17 +98,29 @@ class Transport(abstract.Transport):
                 # return the response
                 return response
 
-            except self._wait_response_exceptions as e:
+            except v3io.dataplane.response.HttpResponseError as response_error:
+                self._logger.warn_with('Response error: {}'.format(str(response_error)))
+                raise response_error
+            except BaseException as e:
                 if num_retries == 0:
-                    self._logger.warn_with('Remote disconnected while waiting for response and ran out of retries',
-                                           e=type(e),
-                                           connection=connection)
+                    self._logger.error_with('Remote disconnected while waiting for response and ran out of retries',
+                                            e=type(e),
+                                            e_msg=e,
+                                            response_body=response_body,
+                                            status_code=status_code,
+                                            headers=headers,
+                                            connection=connection)
 
                     raise e
 
                 self._logger.warn_with('Remote disconnected while waiting for response',
-                                        retries_left=num_retries,
-                                        connection=connection)
+                                       retries_left=num_retries,
+                                       e=type(e),
+                                       e_msg=e,
+                                       response_body=response_body,
+                                       status_code=status_code,
+                                       headers=headers,
+                                       connection=connection)
 
                 num_retries -= 1
 
@@ -117,20 +129,6 @@ class Transport(abstract.Transport):
 
                 # re-send the request on the connection
                 request = self._send_request_on_connection(request, connection)
-            except v3io.dataplane.response.HttpResponseError as response_error:
-                self._logger.warn_with('Response error: {}'.format(str(response_error)))
-                raise response_error
-            except BaseException as e:
-                self._logger.warn_with('Unhandled exception while waiting for response',
-                                       e=type(e),
-                                       e_msg=e,
-                                       response_body=response_body,
-                                       status_code=status_code,
-                                       headers=headers,
-                                       connection=connection)
-                # we don't know what happened – close the connection just in case
-                connection.close()
-                raise e
             finally:
                 self._free_connections.put(connection, block=True)
 
