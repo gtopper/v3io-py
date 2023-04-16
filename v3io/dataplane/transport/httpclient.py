@@ -63,9 +63,9 @@ class Transport(abstract.Transport):
             except queue.Empty:
                 break
             connections.append(conn)
-        self._logger.debug(f"Closing all {len(connections)} v3io transport connections")
-        for conn in connections:
-            conn.close()
+        # self._logger.debug(f"Closing all {len(connections)} v3io transport connections")
+        # for conn in connections:
+        #     conn.close()
 
     def requires_access_key(self):
         return True
