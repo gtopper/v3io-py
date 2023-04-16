@@ -57,13 +57,12 @@ class Transport(abstract.Transport):
 
     def close(self):
         connections = []
-        self._free_connections.empty()
-        # while not self._free_connections.empty():
-        #     try:
-        #         conn = self._free_connections.get(block=False)
-        #     except queue.Empty:
-        #         break
-        #     connections.append(conn)
+        while not self._free_connections.empty():
+            try:
+                conn = self._free_connections.get(block=False)
+            except queue.Empty:
+                break
+            connections.append(conn)
         # self._logger.debug(f"Closing all {len(connections)} v3io transport connections")
         # for conn in connections:
         #     conn.close()
