@@ -57,6 +57,7 @@ class Transport(abstract.Transport):
 
     def close(self):
         connections = []
+        self._free_connections.empty()
         # while not self._free_connections.empty():
         #     try:
         #         conn = self._free_connections.get(block=False)
