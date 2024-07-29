@@ -20,6 +20,7 @@ import ssl
 import v3io.dataplane.request
 import v3io.dataplane.response
 
+from ..output import GetItemOutput
 from . import abstract
 
 
@@ -107,6 +108,14 @@ class Transport(abstract.Transport):
                 self.log("Rx", connection=connection, status_code=status_code, body=response_body)
 
                 response = v3io.dataplane.response.Response(request.output, status_code, headers, response_body)
+
+                if isinstance(request.output, GetItemOutput):
+                    print(
+                        f"111 GetItem response status_code={status_code}, headers={headers}, "
+                        f"response_body={response_body}, response.output={response.output} for request with:\n"
+                        f"method={request.method}, request={request.path}, query={request.query}, "
+                        f"headers={request.headers}, body={request.body}"
+                    )
 
                 self._free_connections.put(connection, block=True)
 
