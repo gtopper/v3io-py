@@ -191,7 +191,7 @@ def encode_update_item(container_name, access_key, kwargs):
 def encode_get_item(container_name, access_key, kwargs):
     body = {"AttributesToGet": ",".join(kwargs["attribute_names"])}
 
-    method, path, query, headers, body = _encode(
+    return _encode(
         "PUT",
         container_name,
         access_key,
@@ -200,8 +200,6 @@ def encode_get_item(container_name, access_key, kwargs):
         {"X-v3io-function": "GetItem"},
         body,
     )
-    print(f"111 GetItem request method={method}, path={path}, query={query}, headers={headers}, body={body}")
-    return method, path, query, headers, body
 
 
 def encode_get_items(container_name, access_key, kwargs):

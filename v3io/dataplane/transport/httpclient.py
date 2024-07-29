@@ -109,7 +109,9 @@ class Transport(abstract.Transport):
 
                 response = v3io.dataplane.response.Response(request.output, status_code, headers, response_body)
 
-                if isinstance(request.output, GetItemOutput):
+                requestV3ioFunction = request.headers.get("X-v3io-function")
+                print(f'111 request.headers.get("X-v3io-function")={requestV3ioFunction}')
+                if requestV3ioFunction == "GetItem":
                     print(
                         f"111 GetItem response status_code={status_code}, headers={headers}, "
                         f"response_body={response_body}, response.output={response.output} for request with:\n"
