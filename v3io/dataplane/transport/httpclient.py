@@ -111,7 +111,7 @@ class Transport(abstract.Transport):
 
                 requestV3ioFunction = request.headers.get("X-v3io-function")
                 print(f'111 request.headers.get("X-v3io-function")={requestV3ioFunction}')
-                if requestV3ioFunction == "GetItem":
+                if requestV3ioFunction in ["GetItem", "PutItem"]:
                     print(
                         f"111 GetItem response status_code={status_code}, headers={headers}, "
                         f"response_body={response_body}, response.output={response.output} for request with:\n"
