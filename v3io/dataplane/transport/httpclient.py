@@ -110,13 +110,19 @@ class Transport(abstract.Transport):
                 response = v3io.dataplane.response.Response(request.output, status_code, headers, response_body)
 
                 requestV3ioFunction = request.headers.get("X-v3io-function")
-                print(f'111 request.headers.get("X-v3io-function")={requestV3ioFunction}')
                 if requestV3ioFunction in ["GetItem", "PutItem"]:
                     print(
-                        f"111 {requestV3ioFunction} response status_code={status_code}, headers={headers}, "
-                        f"response_body={response_body}, response.output={response.output} for request with:\n"
-                        f"method={request.method}, request={request.path}, query={request.query}, "
-                        f"headers={request.headers}, body={request.body}"
+                        f"111 {requestV3ioFunction} response on connection={connection}, client={self}: "
+                        f"status_code={status_code}, "
+                        f"headers={headers}, "
+                        f"response_body={response_body}, "
+                        f"response.output={response.output} "
+                        f"for request with:\n"
+                        f"method={request.method}, "
+                        f"request={request.path}, "
+                        f"query={request.query}, "
+                        f"headers={request.headers}, "
+                        f"body={request.body}"
                     )
 
                 self._free_connections.put(connection, block=True)
