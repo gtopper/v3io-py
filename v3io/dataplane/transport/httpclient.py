@@ -13,6 +13,7 @@
 # limitations under the License.
 #
 import http.client
+import os
 import queue
 import socket
 import ssl
@@ -112,7 +113,11 @@ class Transport(abstract.Transport):
                 requestV3ioFunction = request.headers.get("X-v3io-function")
                 if requestV3ioFunction in ["GetItem", "PutItem"]:
                     print(
-                        f"111 {requestV3ioFunction} response on connection={connection}, client={self}: "
+                        f"111 {requestV3ioFunction} response on "
+                        f"connection={connection}, "
+                        f"connection.sock={connection.sock}, "
+                        f"client={self}, "
+                        f"pid={os.getpid()}: "
                         f"status_code={status_code}, "
                         f"headers={headers}, "
                         f"response_body={response_body}, "
